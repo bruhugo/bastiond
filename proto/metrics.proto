@@ -1,0 +1,50 @@
+syntax = "proto3";
+package metrics;
+
+option go_package = "generated/proto";
+
+message MemoryMetrics {
+    int64 TotalRam = 1;
+    int64 UsedRam = 2;
+    int64 FreeRam = 3;
+    int64 AvailableRam = 4;
+    int32 MemoryUtilization = 5;
+    int64 TotalSwap = 6;
+    int64 UsedSwap = 7;
+}
+
+message CPUMetrics {
+    int64 UserUtilization = 1;
+    int64 SystemUtilization = 2;
+    int64 IOWait = 3;
+}
+
+message NetworkMetrics {
+    int64 RXBytes = 1;
+    int64 TXBytes = 2;
+    int64 TXPackets = 3;
+    int64 RXPackets = 4;
+    int64 PacketLoss = 5;
+}
+
+message DiskMetrics {
+    int64 TotalDisk = 1;
+    int64 FreeDisk = 2;
+    int64 UsedDisk = 3;
+    int64 DiskUsage = 4;
+}
+
+message Metrics {
+    MemoryMetrics memoryMetrics = 1;
+    CPUMetrics cpuMetrics = 2;
+    NetworkMetrics networkMetrics = 3;
+    DiskMetrics diskMetrics = 4;
+}
+
+message MetricsRequest {
+
+}
+
+service MetricsService {
+    rpc GetMetrics(MetricsRequest) returns (stream Metrics) {}
+}
