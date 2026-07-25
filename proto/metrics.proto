@@ -45,6 +45,21 @@ message MetricsRequest {
 
 }
 
+enum ConnectionStatus {
+    UNKNOWN = 0;
+    ACCEPTED = 1;
+    DENIED = 2;
+}
+
+message ConnectionRequest {
+    string Password = 1;
+}
+
+message ConnectionResponse {
+    ConnectionStatus status = 1;
+}
+
 service MetricsService {
-    rpc GetMetrics(MetricsRequest) returns (stream Metrics) {}
+    rpc GetMetrics(MetricsRequest) returns (Metrics) {}
+    rpc Connect(ConnectionRequest) returns (ConnectionResponse) {}
 }

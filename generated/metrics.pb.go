@@ -21,6 +21,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type ConnectionStatus int32
+
+const (
+	ConnectionStatus_UNKNOWN  ConnectionStatus = 0
+	ConnectionStatus_ACCEPTED ConnectionStatus = 1
+	ConnectionStatus_DENIED   ConnectionStatus = 2
+)
+
+// Enum value maps for ConnectionStatus.
+var (
+	ConnectionStatus_name = map[int32]string{
+		0: "UNKNOWN",
+		1: "ACCEPTED",
+		2: "DENIED",
+	}
+	ConnectionStatus_value = map[string]int32{
+		"UNKNOWN":  0,
+		"ACCEPTED": 1,
+		"DENIED":   2,
+	}
+)
+
+func (x ConnectionStatus) Enum() *ConnectionStatus {
+	p := new(ConnectionStatus)
+	*p = x
+	return p
+}
+
+func (x ConnectionStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ConnectionStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_metrics_proto_enumTypes[0].Descriptor()
+}
+
+func (ConnectionStatus) Type() protoreflect.EnumType {
+	return &file_metrics_proto_enumTypes[0]
+}
+
+func (x ConnectionStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ConnectionStatus.Descriptor instead.
+func (ConnectionStatus) EnumDescriptor() ([]byte, []int) {
+	return file_metrics_proto_rawDescGZIP(), []int{0}
+}
+
 type MemoryMetrics struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	TotalRam          int64                  `protobuf:"varint,1,opt,name=TotalRam,proto3" json:"TotalRam,omitempty"`
@@ -421,6 +470,94 @@ func (*MetricsRequest) Descriptor() ([]byte, []int) {
 	return file_metrics_proto_rawDescGZIP(), []int{5}
 }
 
+type ConnectionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Password      string                 `protobuf:"bytes,1,opt,name=Password,proto3" json:"Password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConnectionRequest) Reset() {
+	*x = ConnectionRequest{}
+	mi := &file_metrics_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConnectionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConnectionRequest) ProtoMessage() {}
+
+func (x *ConnectionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_metrics_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConnectionRequest.ProtoReflect.Descriptor instead.
+func (*ConnectionRequest) Descriptor() ([]byte, []int) {
+	return file_metrics_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ConnectionRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type ConnectionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        ConnectionStatus       `protobuf:"varint,1,opt,name=status,proto3,enum=metrics.ConnectionStatus" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConnectionResponse) Reset() {
+	*x = ConnectionResponse{}
+	mi := &file_metrics_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConnectionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConnectionResponse) ProtoMessage() {}
+
+func (x *ConnectionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_metrics_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConnectionResponse.ProtoReflect.Descriptor instead.
+func (*ConnectionResponse) Descriptor() ([]byte, []int) {
+	return file_metrics_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ConnectionResponse) GetStatus() ConnectionStatus {
+	if x != nil {
+		return x.Status
+	}
+	return ConnectionStatus_UNKNOWN
+}
+
 var File_metrics_proto protoreflect.FileDescriptor
 
 const file_metrics_proto_rawDesc = "" +
@@ -459,10 +596,20 @@ const file_metrics_proto_rawDesc = "" +
 	"cpuMetrics\x12?\n" +
 	"\x0enetworkMetrics\x18\x03 \x01(\v2\x17.metrics.NetworkMetricsR\x0enetworkMetrics\x126\n" +
 	"\vdiskMetrics\x18\x04 \x01(\v2\x14.metrics.DiskMetricsR\vdiskMetrics\"\x10\n" +
-	"\x0eMetricsRequest2M\n" +
-	"\x0eMetricsService\x12;\n" +
+	"\x0eMetricsRequest\"/\n" +
+	"\x11ConnectionRequest\x12\x1a\n" +
+	"\bPassword\x18\x01 \x01(\tR\bPassword\"G\n" +
+	"\x12ConnectionResponse\x121\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x19.metrics.ConnectionStatusR\x06status*9\n" +
+	"\x10ConnectionStatus\x12\v\n" +
+	"\aUNKNOWN\x10\x00\x12\f\n" +
+	"\bACCEPTED\x10\x01\x12\n" +
 	"\n" +
-	"GetMetrics\x12\x17.metrics.MetricsRequest\x1a\x10.metrics.Metrics\"\x000\x01B\x11Z\x0fgenerated/protob\x06proto3"
+	"\x06DENIED\x10\x022\x91\x01\n" +
+	"\x0eMetricsService\x129\n" +
+	"\n" +
+	"GetMetrics\x12\x17.metrics.MetricsRequest\x1a\x10.metrics.Metrics\"\x00\x12D\n" +
+	"\aConnect\x12\x1a.metrics.ConnectionRequest\x1a\x1b.metrics.ConnectionResponse\"\x00B\x11Z\x0fgenerated/protob\x06proto3"
 
 var (
 	file_metrics_proto_rawDescOnce sync.Once
@@ -476,27 +623,34 @@ func file_metrics_proto_rawDescGZIP() []byte {
 	return file_metrics_proto_rawDescData
 }
 
-var file_metrics_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_metrics_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_metrics_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_metrics_proto_goTypes = []any{
-	(*MemoryMetrics)(nil),  // 0: metrics.MemoryMetrics
-	(*CPUMetrics)(nil),     // 1: metrics.CPUMetrics
-	(*NetworkMetrics)(nil), // 2: metrics.NetworkMetrics
-	(*DiskMetrics)(nil),    // 3: metrics.DiskMetrics
-	(*Metrics)(nil),        // 4: metrics.Metrics
-	(*MetricsRequest)(nil), // 5: metrics.MetricsRequest
+	(ConnectionStatus)(0),      // 0: metrics.ConnectionStatus
+	(*MemoryMetrics)(nil),      // 1: metrics.MemoryMetrics
+	(*CPUMetrics)(nil),         // 2: metrics.CPUMetrics
+	(*NetworkMetrics)(nil),     // 3: metrics.NetworkMetrics
+	(*DiskMetrics)(nil),        // 4: metrics.DiskMetrics
+	(*Metrics)(nil),            // 5: metrics.Metrics
+	(*MetricsRequest)(nil),     // 6: metrics.MetricsRequest
+	(*ConnectionRequest)(nil),  // 7: metrics.ConnectionRequest
+	(*ConnectionResponse)(nil), // 8: metrics.ConnectionResponse
 }
 var file_metrics_proto_depIdxs = []int32{
-	0, // 0: metrics.Metrics.memoryMetrics:type_name -> metrics.MemoryMetrics
-	1, // 1: metrics.Metrics.cpuMetrics:type_name -> metrics.CPUMetrics
-	2, // 2: metrics.Metrics.networkMetrics:type_name -> metrics.NetworkMetrics
-	3, // 3: metrics.Metrics.diskMetrics:type_name -> metrics.DiskMetrics
-	5, // 4: metrics.MetricsService.GetMetrics:input_type -> metrics.MetricsRequest
-	4, // 5: metrics.MetricsService.GetMetrics:output_type -> metrics.Metrics
-	5, // [5:6] is the sub-list for method output_type
-	4, // [4:5] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	1, // 0: metrics.Metrics.memoryMetrics:type_name -> metrics.MemoryMetrics
+	2, // 1: metrics.Metrics.cpuMetrics:type_name -> metrics.CPUMetrics
+	3, // 2: metrics.Metrics.networkMetrics:type_name -> metrics.NetworkMetrics
+	4, // 3: metrics.Metrics.diskMetrics:type_name -> metrics.DiskMetrics
+	0, // 4: metrics.ConnectionResponse.status:type_name -> metrics.ConnectionStatus
+	6, // 5: metrics.MetricsService.GetMetrics:input_type -> metrics.MetricsRequest
+	7, // 6: metrics.MetricsService.Connect:input_type -> metrics.ConnectionRequest
+	5, // 7: metrics.MetricsService.GetMetrics:output_type -> metrics.Metrics
+	8, // 8: metrics.MetricsService.Connect:output_type -> metrics.ConnectionResponse
+	7, // [7:9] is the sub-list for method output_type
+	5, // [5:7] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_metrics_proto_init() }
@@ -509,13 +663,14 @@ func file_metrics_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_metrics_proto_rawDesc), len(file_metrics_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   6,
+			NumEnums:      1,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_metrics_proto_goTypes,
 		DependencyIndexes: file_metrics_proto_depIdxs,
+		EnumInfos:         file_metrics_proto_enumTypes,
 		MessageInfos:      file_metrics_proto_msgTypes,
 	}.Build()
 	File_metrics_proto = out.File
