@@ -76,7 +76,7 @@ type MemoryMetrics struct {
 	UsedRam           int64                  `protobuf:"varint,2,opt,name=UsedRam,proto3" json:"UsedRam,omitempty"`
 	FreeRam           int64                  `protobuf:"varint,3,opt,name=FreeRam,proto3" json:"FreeRam,omitempty"`
 	AvailableRam      int64                  `protobuf:"varint,4,opt,name=AvailableRam,proto3" json:"AvailableRam,omitempty"`
-	MemoryUtilization int32                  `protobuf:"varint,5,opt,name=MemoryUtilization,proto3" json:"MemoryUtilization,omitempty"`
+	MemoryUtilization float64                `protobuf:"fixed64,5,opt,name=MemoryUtilization,proto3" json:"MemoryUtilization,omitempty"`
 	TotalSwap         int64                  `protobuf:"varint,6,opt,name=TotalSwap,proto3" json:"TotalSwap,omitempty"`
 	UsedSwap          int64                  `protobuf:"varint,7,opt,name=UsedSwap,proto3" json:"UsedSwap,omitempty"`
 	unknownFields     protoimpl.UnknownFields
@@ -141,7 +141,7 @@ func (x *MemoryMetrics) GetAvailableRam() int64 {
 	return 0
 }
 
-func (x *MemoryMetrics) GetMemoryUtilization() int32 {
+func (x *MemoryMetrics) GetMemoryUtilization() float64 {
 	if x != nil {
 		return x.MemoryUtilization
 	}
@@ -164,9 +164,10 @@ func (x *MemoryMetrics) GetUsedSwap() int64 {
 
 type CPUMetrics struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	UserUtilization   int64                  `protobuf:"varint,1,opt,name=UserUtilization,proto3" json:"UserUtilization,omitempty"`
-	SystemUtilization int64                  `protobuf:"varint,2,opt,name=SystemUtilization,proto3" json:"SystemUtilization,omitempty"`
-	IOWait            int64                  `protobuf:"varint,3,opt,name=IOWait,proto3" json:"IOWait,omitempty"`
+	UserUtilization   float64                `protobuf:"fixed64,1,opt,name=UserUtilization,proto3" json:"UserUtilization,omitempty"`
+	SystemUtilization float64                `protobuf:"fixed64,2,opt,name=SystemUtilization,proto3" json:"SystemUtilization,omitempty"`
+	IdleUtilization   float64                `protobuf:"fixed64,3,opt,name=IdleUtilization,proto3" json:"IdleUtilization,omitempty"`
+	IOWait            float64                `protobuf:"fixed64,4,opt,name=IOWait,proto3" json:"IOWait,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -201,21 +202,28 @@ func (*CPUMetrics) Descriptor() ([]byte, []int) {
 	return file_metrics_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CPUMetrics) GetUserUtilization() int64 {
+func (x *CPUMetrics) GetUserUtilization() float64 {
 	if x != nil {
 		return x.UserUtilization
 	}
 	return 0
 }
 
-func (x *CPUMetrics) GetSystemUtilization() int64 {
+func (x *CPUMetrics) GetSystemUtilization() float64 {
 	if x != nil {
 		return x.SystemUtilization
 	}
 	return 0
 }
 
-func (x *CPUMetrics) GetIOWait() int64 {
+func (x *CPUMetrics) GetIdleUtilization() float64 {
+	if x != nil {
+		return x.IdleUtilization
+	}
+	return 0
+}
+
+func (x *CPUMetrics) GetIOWait() float64 {
 	if x != nil {
 		return x.IOWait
 	}
@@ -568,14 +576,15 @@ const file_metrics_proto_rawDesc = "" +
 	"\aUsedRam\x18\x02 \x01(\x03R\aUsedRam\x12\x18\n" +
 	"\aFreeRam\x18\x03 \x01(\x03R\aFreeRam\x12\"\n" +
 	"\fAvailableRam\x18\x04 \x01(\x03R\fAvailableRam\x12,\n" +
-	"\x11MemoryUtilization\x18\x05 \x01(\x05R\x11MemoryUtilization\x12\x1c\n" +
+	"\x11MemoryUtilization\x18\x05 \x01(\x01R\x11MemoryUtilization\x12\x1c\n" +
 	"\tTotalSwap\x18\x06 \x01(\x03R\tTotalSwap\x12\x1a\n" +
-	"\bUsedSwap\x18\a \x01(\x03R\bUsedSwap\"|\n" +
+	"\bUsedSwap\x18\a \x01(\x03R\bUsedSwap\"\xa6\x01\n" +
 	"\n" +
 	"CPUMetrics\x12(\n" +
-	"\x0fUserUtilization\x18\x01 \x01(\x03R\x0fUserUtilization\x12,\n" +
-	"\x11SystemUtilization\x18\x02 \x01(\x03R\x11SystemUtilization\x12\x16\n" +
-	"\x06IOWait\x18\x03 \x01(\x03R\x06IOWait\"\xa0\x01\n" +
+	"\x0fUserUtilization\x18\x01 \x01(\x01R\x0fUserUtilization\x12,\n" +
+	"\x11SystemUtilization\x18\x02 \x01(\x01R\x11SystemUtilization\x12(\n" +
+	"\x0fIdleUtilization\x18\x03 \x01(\x01R\x0fIdleUtilization\x12\x16\n" +
+	"\x06IOWait\x18\x04 \x01(\x01R\x06IOWait\"\xa0\x01\n" +
 	"\x0eNetworkMetrics\x12\x18\n" +
 	"\aRXBytes\x18\x01 \x01(\x03R\aRXBytes\x12\x18\n" +
 	"\aTXBytes\x18\x02 \x01(\x03R\aTXBytes\x12\x1c\n" +

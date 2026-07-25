@@ -8,15 +8,16 @@ message MemoryMetrics {
     int64 UsedRam = 2;
     int64 FreeRam = 3;
     int64 AvailableRam = 4;
-    int32 MemoryUtilization = 5;
+    double MemoryUtilization = 5;
     int64 TotalSwap = 6;
     int64 UsedSwap = 7;
 }
 
 message CPUMetrics {
-    int64 UserUtilization = 1;
-    int64 SystemUtilization = 2;
-    int64 IOWait = 3;
+    double UserUtilization = 1;
+    double SystemUtilization = 2;
+    double IdleUtilization = 3;
+    double IOWait = 4;
 }
 
 message NetworkMetrics {
