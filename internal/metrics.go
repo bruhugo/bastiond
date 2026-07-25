@@ -6,13 +6,14 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/shirou/gopsutil/v4/net"
 )
 
-func getMetrics(ctx context.Context) (*pb.Metrics, error) {
-	cpu, err := getCPUMetrics(ctx)
+func getMetrics(ctx context.Context, request *pb.MetricsRequest) (*pb.MetricsResponse, error) {
+	cpu, err := getCPUMetrics(ctx, request.MultipleCores)
 	if err != nil {
 		return nil, err
 	}
@@ -22,47 +23,83 @@ func getMetrics(ctx context.Context) (*pb.Metrics, error) {
 		return nil, err
 	}
 
-	net, err := getNetworkMetrics(ctx)
+	net, err := getNetworkMetrics(ctx, request.MultipleInterfaces)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.Metrics{
+	disk, err := getDiskMetrics(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.MetricsResponse{
 		CpuMetrics:     cpu,
 		MemoryMetrics:  mem,
 		NetworkMetrics: net,
+		DiskMetrics:    disk,
 	}, nil
 }
 
-func getCPUMetrics(ctx context.Context) (*pb.CPUMetrics, error) {
-	prev, _ := cpu.Times(false)
+func getCPUMetrics(ctx context.Context, multipleCores bool) (*pb.CPUMetrics, error) {
+	prev, err := cpu.TimesWithContext(ctx, multipleCores)
+	if err != nil {
+		return nil, err
+	}
 
 	time.Sleep(time.Second)
 
-	curr, _ := cpu.Times(false)
+	curr, err := cpu.TimesWithContext(ctx, multipleCores)
+	if err != nil {
+		return nil, err
+	}
 
-	a := prev[0]
-	b := curr[0]
+	if len(prev) == 0 || len(curr) == 0 {
+		return &pb.CPUMetrics{IsMultipleCores: false}, nil
+	}
 
-	user := b.User - a.User
-	system := b.System - a.System
-	idle := b.Idle - a.Idle
-	iowait := b.Iowait - a.Iowait
-	irq := b.Irq - a.Irq
-	softirq := b.Softirq - a.Softirq
-	nice := b.Nice - a.Nice
-	steal := b.Steal - a.Steal
+	list := make([]*pb.CoreCPUMetrics, 0, 1)
+	for i, stat := range curr {
+		if i >= len(prev) {
+			break
+		}
 
-	total :=
-		user + system + idle +
-			iowait + irq + softirq +
-			nice + steal
+		a := stat
+		b := prev[i]
+
+		user := b.User - a.User
+		system := b.System - a.System
+		idle := b.Idle - a.Idle
+		iowait := b.Iowait - a.Iowait
+		irq := b.Irq - a.Irq
+		softirq := b.Softirq - a.Softirq
+		nice := b.Nice - a.Nice
+		steal := b.Steal - a.Steal
+
+		total :=
+			user + system + idle +
+				iowait + irq + softirq +
+				nice + steal
+
+		if total == 0 {
+			continue
+		}
+
+		metrics := &pb.CoreCPUMetrics{
+			UserUtilization:   user / total,
+			SystemUtilization: system / total,
+			IdleUtilization:   idle / total,
+			IoWait:            iowait / total,
+		}
+
+		list = append(list, metrics)
+	}
+
+	slog.Debug("collected memory metrics")
 
 	return &pb.CPUMetrics{
-		IdleUtilization:   idle / total,
-		SystemUtilization: system / total,
-		IOWait:            iowait / total,
-		UserUtilization:   user / total,
+		IsMultipleCores: false,
+		Cores:           list,
 	}, nil
 }
 
@@ -72,29 +109,82 @@ func getMemoryMetrics(ctx context.Context) (*pb.MemoryMetrics, error) {
 		slog.Error("error getting memory status", slog.String("error", err.Error()))
 	}
 
+	slog.Debug("collected memory metrics")
+
 	return &pb.MemoryMetrics{
-		TotalRam:          int64(stat.Total),
-		UsedRam:           int64(stat.Used),
-		AvailableRam:      int64(stat.Available),
+		TotalRam:          stat.Total,
+		UsedRam:           stat.Used,
+		AvailableRam:      stat.Available,
 		MemoryUtilization: stat.UsedPercent,
-		TotalSwap:         int64(stat.SwapTotal),
-		UsedSwap:          int64(stat.Total - stat.Free),
+		TotalSwap:         stat.SwapTotal,
+		UsedSwap:          stat.Total - stat.Free,
 	}, nil
 }
 
-func getNetworkMetrics(ctx context.Context) (*pb.NetworkMetrics, error) {
-	stats, err := net.IOCountersWithContext(ctx, false)
+func getNetworkMetrics(ctx context.Context, pernic bool) (*pb.NetworkMetrics, error) {
+	stats, err := net.IOCountersWithContext(ctx, pernic)
 	if err != nil {
 		slog.Error("error getting network settings", slog.String("error", err.Error()))
 		return nil, err
 	}
-	stat := stats[0]
+
+	if len(stats) == 0 {
+		return &pb.NetworkMetrics{IsMultipleInterfaces: false}, nil
+	}
+
+	list := make([]*pb.NetworkInterfaceMetrics, 0)
+
+	for _, stat := range stats {
+		list = append(list, &pb.NetworkInterfaceMetrics{
+			RxBytes:       stat.BytesRecv,
+			TxBytes:       stat.BytesSent,
+			RxPackets:     stat.PacketsRecv,
+			TxPackets:     stat.PacketsSent,
+			InterfaceName: stat.Name,
+		})
+	}
+
+	slog.Debug("collected network metrics",
+		slog.Int("interfaces", len(stats)),
+		slog.Bool("pernic", pernic),
+	)
 
 	return &pb.NetworkMetrics{
-		RXBytes:    int64(stat.BytesRecv),
-		RXPackets:  int64(stat.PacketsRecv),
-		TXBytes:    int64(stat.BytesSent),
-		TXPackets:  int64(stat.PacketsSent),
-		PacketLoss: int64(stat.Dropout + stat.Dropin),
+		IsMultipleInterfaces:    false,
+		NetworkInterfaceMetrics: list,
+	}, nil
+}
+
+func getDiskMetrics(ctx context.Context) (*pb.DiskMetrics, error) {
+	usage, err := disk.UsageWithContext(ctx, "/")
+	if err != nil {
+		slog.Error("error collecting disk metrics", slog.String("error", err.Error()))
+		return nil, err
+	}
+
+	partitions, err := disk.PartitionsWithContext(ctx, true)
+	if err != nil {
+		slog.Error("error collecting disk metrics", slog.String("error", err.Error()))
+		return nil, err
+	}
+
+	partitionsMetrics := make([]*pb.PartitionMetrics, 0)
+
+	for _, partition := range partitions {
+		partitionsMetrics = append(partitionsMetrics, &pb.PartitionMetrics{
+			Device:     partition.Device,
+			Mountpoint: partition.Mountpoint,
+			Fstype:     partition.Fstype,
+		})
+	}
+
+	return &pb.DiskMetrics{
+		TotalDisk:   usage.Total,
+		UsedDisk:    usage.Used,
+		FreeDisk:    usage.Free,
+		DiskUsage:   usage.UsedPercent,
+		InodesTotal: usage.InodesTotal,
+		InodesUsed:  usage.InodesUsed,
+		InodesFree:  usage.InodesFree,
 	}, nil
 }

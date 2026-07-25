@@ -27,7 +27,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MetricsServiceClient interface {
-	GetMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*Metrics, error)
+	GetMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*MetricsResponse, error)
 	Connect(ctx context.Context, in *ConnectionRequest, opts ...grpc.CallOption) (*ConnectionResponse, error)
 }
 
@@ -39,9 +39,9 @@ func NewMetricsServiceClient(cc grpc.ClientConnInterface) MetricsServiceClient {
 	return &metricsServiceClient{cc}
 }
 
-func (c *metricsServiceClient) GetMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*Metrics, error) {
+func (c *metricsServiceClient) GetMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*MetricsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Metrics)
+	out := new(MetricsResponse)
 	err := c.cc.Invoke(ctx, MetricsService_GetMetrics_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (c *metricsServiceClient) Connect(ctx context.Context, in *ConnectionReques
 // All implementations must embed UnimplementedMetricsServiceServer
 // for forward compatibility.
 type MetricsServiceServer interface {
-	GetMetrics(context.Context, *MetricsRequest) (*Metrics, error)
+	GetMetrics(context.Context, *MetricsRequest) (*MetricsResponse, error)
 	Connect(context.Context, *ConnectionRequest) (*ConnectionResponse, error)
 	mustEmbedUnimplementedMetricsServiceServer()
 }
@@ -75,7 +75,7 @@ type MetricsServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedMetricsServiceServer struct{}
 
-func (UnimplementedMetricsServiceServer) GetMetrics(context.Context, *MetricsRequest) (*Metrics, error) {
+func (UnimplementedMetricsServiceServer) GetMetrics(context.Context, *MetricsRequest) (*MetricsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetMetrics not implemented")
 }
 func (UnimplementedMetricsServiceServer) Connect(context.Context, *ConnectionRequest) (*ConnectionResponse, error) {

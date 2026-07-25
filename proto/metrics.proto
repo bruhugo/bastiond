@@ -3,39 +3,74 @@ package metrics;
 
 option go_package = "generated/proto";
 
-message MemoryMetrics {
-    int64 TotalRam = 1;
-    int64 UsedRam = 2;
-    int64 FreeRam = 3;
-    int64 AvailableRam = 4;
-    double MemoryUtilization = 5;
-    int64 TotalSwap = 6;
-    int64 UsedSwap = 7;
+// CPU
+message CoreCPUMetrics {
+    double userUtilization = 1;
+    double systemUtilization = 2;
+    double idleUtilization = 3;
+    double ioWait = 4;
 }
 
 message CPUMetrics {
-    double UserUtilization = 1;
-    double SystemUtilization = 2;
-    double IdleUtilization = 3;
-    double IOWait = 4;
+    bool isMultipleCores = 1;
+    repeated CoreCPUMetrics cores = 2;
+}
+
+
+// MEMORY
+
+message MemoryMetrics {
+    uint64 totalRam = 1;
+    uint64 usedRam = 2;
+    uint64 freeRam = 3;
+    uint64 availableRam = 4;
+    double memoryUtilization = 5;
+    uint64 totalSwap = 6;
+    uint64 usedSwap = 7;
+}
+
+
+// NETWORK
+
+message NetworkInterfaceMetrics {
+    uint64 rxBytes = 1;
+    uint64 txBytes = 2;
+    uint64 txPackets = 3;
+    uint64 rxPackets = 4;
+    uint64 packetLoss = 5;
+    string interfaceName = 6;
 }
 
 message NetworkMetrics {
-    int64 RXBytes = 1;
-    int64 TXBytes = 2;
-    int64 TXPackets = 3;
-    int64 RXPackets = 4;
-    int64 PacketLoss = 5;
+    bool isMultipleInterfaces = 1;
+    repeated NetworkInterfaceMetrics networkInterfaceMetrics = 2;
+}
+
+
+// DISK
+
+message PartitionMetrics {
+    string device = 1;
+    string mountpoint = 2;
+    string fstype = 3;
 }
 
 message DiskMetrics {
-    int64 TotalDisk = 1;
-    int64 FreeDisk = 2;
-    int64 UsedDisk = 3;
-    int64 DiskUsage = 4;
+    uint64 totalDisk = 1;
+    uint64 freeDisk = 2;
+    uint64 usedDisk = 3;
+    double diskUsage = 4;
+    uint64 inodesTotal = 5;
+    uint64 inodesUsed = 6;
+    uint64 inodesFree = 7;
+    double inodesUsedPercent = 8;
+    repeated PartitionMetrics partitionMetrics = 9;
 }
 
-message Metrics {
+
+// CONNECTION
+
+message MetricsResponse {
     MemoryMetrics memoryMetrics = 1;
     CPUMetrics cpuMetrics = 2;
     NetworkMetrics networkMetrics = 3;
@@ -43,7 +78,8 @@ message Metrics {
 }
 
 message MetricsRequest {
-
+    bool multipleCores = 1;
+    bool multipleInterfaces = 2;
 }
 
 enum ConnectionStatus {
@@ -53,14 +89,15 @@ enum ConnectionStatus {
 }
 
 message ConnectionRequest {
-    string Password = 1;
+    string password = 1;
 }
 
 message ConnectionResponse {
     ConnectionStatus status = 1;
+    string name = 2;
 }
 
 service MetricsService {
-    rpc GetMetrics(MetricsRequest) returns (Metrics) {}
+    rpc GetMetrics(MetricsRequest) returns (MetricsResponse) {}
     rpc Connect(ConnectionRequest) returns (ConnectionResponse) {}
 }
