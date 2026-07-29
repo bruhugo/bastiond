@@ -70,13 +70,13 @@ func (ConnectionStatus) EnumDescriptor() ([]byte, []int) {
 	return file_metrics_proto_rawDescGZIP(), []int{0}
 }
 
-// CPU
 type CoreCPUMetrics struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	UserUtilization   float64                `protobuf:"fixed64,1,opt,name=userUtilization,proto3" json:"userUtilization,omitempty"`
 	SystemUtilization float64                `protobuf:"fixed64,2,opt,name=systemUtilization,proto3" json:"systemUtilization,omitempty"`
 	IdleUtilization   float64                `protobuf:"fixed64,3,opt,name=idleUtilization,proto3" json:"idleUtilization,omitempty"`
 	IoWait            float64                `protobuf:"fixed64,4,opt,name=ioWait,proto3" json:"ioWait,omitempty"`
+	Core              string                 `protobuf:"bytes,5,opt,name=core,proto3" json:"core,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -139,10 +139,18 @@ func (x *CoreCPUMetrics) GetIoWait() float64 {
 	return 0
 }
 
+func (x *CoreCPUMetrics) GetCore() string {
+	if x != nil {
+		return x.Core
+	}
+	return ""
+}
+
 type CPUMetrics struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	IsMultipleCores bool                   `protobuf:"varint,1,opt,name=isMultipleCores,proto3" json:"isMultipleCores,omitempty"`
 	Cores           []*CoreCPUMetrics      `protobuf:"bytes,2,rep,name=cores,proto3" json:"cores,omitempty"`
+	General         *CoreCPUMetrics        `protobuf:"bytes,3,opt,name=general,proto3" json:"general,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -187,6 +195,13 @@ func (x *CPUMetrics) GetIsMultipleCores() bool {
 func (x *CPUMetrics) GetCores() []*CoreCPUMetrics {
 	if x != nil {
 		return x.Cores
+	}
+	return nil
+}
+
+func (x *CPUMetrics) GetGeneral() *CoreCPUMetrics {
+	if x != nil {
+		return x.General
 	}
 	return nil
 }
@@ -807,16 +822,18 @@ var File_metrics_proto protoreflect.FileDescriptor
 
 const file_metrics_proto_rawDesc = "" +
 	"\n" +
-	"\rmetrics.proto\x12\ametrics\"\xaa\x01\n" +
+	"\rmetrics.proto\x12\ametrics\"\xbe\x01\n" +
 	"\x0eCoreCPUMetrics\x12(\n" +
 	"\x0fuserUtilization\x18\x01 \x01(\x01R\x0fuserUtilization\x12,\n" +
 	"\x11systemUtilization\x18\x02 \x01(\x01R\x11systemUtilization\x12(\n" +
 	"\x0fidleUtilization\x18\x03 \x01(\x01R\x0fidleUtilization\x12\x16\n" +
-	"\x06ioWait\x18\x04 \x01(\x01R\x06ioWait\"e\n" +
+	"\x06ioWait\x18\x04 \x01(\x01R\x06ioWait\x12\x12\n" +
+	"\x04core\x18\x05 \x01(\tR\x04core\"\x98\x01\n" +
 	"\n" +
 	"CPUMetrics\x12(\n" +
 	"\x0fisMultipleCores\x18\x01 \x01(\bR\x0fisMultipleCores\x12-\n" +
-	"\x05cores\x18\x02 \x03(\v2\x17.metrics.CoreCPUMetricsR\x05cores\"\xeb\x01\n" +
+	"\x05cores\x18\x02 \x03(\v2\x17.metrics.CoreCPUMetricsR\x05cores\x121\n" +
+	"\ageneral\x18\x03 \x01(\v2\x17.metrics.CoreCPUMetricsR\ageneral\"\xeb\x01\n" +
 	"\rMemoryMetrics\x12\x1a\n" +
 	"\btotalRam\x18\x01 \x01(\x04R\btotalRam\x12\x18\n" +
 	"\ausedRam\x18\x02 \x01(\x04R\ausedRam\x12\x18\n" +
@@ -912,22 +929,23 @@ var file_metrics_proto_goTypes = []any{
 }
 var file_metrics_proto_depIdxs = []int32{
 	1,  // 0: metrics.CPUMetrics.cores:type_name -> metrics.CoreCPUMetrics
-	4,  // 1: metrics.NetworkMetrics.networkInterfaceMetrics:type_name -> metrics.NetworkInterfaceMetrics
-	6,  // 2: metrics.DiskMetrics.partitionMetrics:type_name -> metrics.PartitionMetrics
-	3,  // 3: metrics.MetricsResponse.memoryMetrics:type_name -> metrics.MemoryMetrics
-	2,  // 4: metrics.MetricsResponse.cpuMetrics:type_name -> metrics.CPUMetrics
-	5,  // 5: metrics.MetricsResponse.networkMetrics:type_name -> metrics.NetworkMetrics
-	7,  // 6: metrics.MetricsResponse.diskMetrics:type_name -> metrics.DiskMetrics
-	0,  // 7: metrics.ConnectionResponse.status:type_name -> metrics.ConnectionStatus
-	9,  // 8: metrics.MetricsService.GetMetrics:input_type -> metrics.MetricsRequest
-	10, // 9: metrics.MetricsService.Connect:input_type -> metrics.ConnectionRequest
-	8,  // 10: metrics.MetricsService.GetMetrics:output_type -> metrics.MetricsResponse
-	11, // 11: metrics.MetricsService.Connect:output_type -> metrics.ConnectionResponse
-	10, // [10:12] is the sub-list for method output_type
-	8,  // [8:10] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	1,  // 1: metrics.CPUMetrics.general:type_name -> metrics.CoreCPUMetrics
+	4,  // 2: metrics.NetworkMetrics.networkInterfaceMetrics:type_name -> metrics.NetworkInterfaceMetrics
+	6,  // 3: metrics.DiskMetrics.partitionMetrics:type_name -> metrics.PartitionMetrics
+	3,  // 4: metrics.MetricsResponse.memoryMetrics:type_name -> metrics.MemoryMetrics
+	2,  // 5: metrics.MetricsResponse.cpuMetrics:type_name -> metrics.CPUMetrics
+	5,  // 6: metrics.MetricsResponse.networkMetrics:type_name -> metrics.NetworkMetrics
+	7,  // 7: metrics.MetricsResponse.diskMetrics:type_name -> metrics.DiskMetrics
+	0,  // 8: metrics.ConnectionResponse.status:type_name -> metrics.ConnectionStatus
+	9,  // 9: metrics.MetricsService.GetMetrics:input_type -> metrics.MetricsRequest
+	10, // 10: metrics.MetricsService.Connect:input_type -> metrics.ConnectionRequest
+	8,  // 11: metrics.MetricsService.GetMetrics:output_type -> metrics.MetricsResponse
+	11, // 12: metrics.MetricsService.Connect:output_type -> metrics.ConnectionResponse
+	11, // [11:13] is the sub-list for method output_type
+	9,  // [9:11] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_metrics_proto_init() }

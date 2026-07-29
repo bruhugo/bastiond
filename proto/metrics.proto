@@ -4,16 +4,19 @@ package metrics;
 option go_package = "generated/proto";
 
 // CPU
+
 message CoreCPUMetrics {
     double userUtilization = 1;
     double systemUtilization = 2;
     double idleUtilization = 3;
     double ioWait = 4;
+    string core = 5;
 }
 
 message CPUMetrics {
     bool isMultipleCores = 1;
     repeated CoreCPUMetrics cores = 2;
+    CoreCPUMetrics general = 3; 
 }
 
 

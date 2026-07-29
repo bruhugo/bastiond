@@ -3,6 +3,7 @@ package main
 import (
 	pb "bastiond/generated"
 	server "bastiond/internal"
+	"log/slog"
 	"net"
 
 	"google.golang.org/grpc"
@@ -18,6 +19,7 @@ func main() {
 
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterMetricsServiceServer(grpcServer, &server.MetricsServer{})
+	slog.Info("server is ready")
 	if err := grpcServer.Serve(lis); err != nil {
 		panic(err)
 	}

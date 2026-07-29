@@ -42,14 +42,22 @@ func getMetrics(ctx context.Context, request *pb.MetricsRequest) (*pb.MetricsRes
 }
 
 func getCPUMetrics(ctx context.Context, multipleCores bool) (*pb.CPUMetrics, error) {
-	prev, err := cpu.TimesWithContext(ctx, multipleCores)
+	prev, err := cpu.TimesWithContext(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	prevGen, err := cpu.TimesWithContext(ctx, false)
 	if err != nil {
 		return nil, err
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(500 * time.Millisecond)
 
-	curr, err := cpu.TimesWithContext(ctx, multipleCores)
+	curr, err := cpu.TimesWithContext(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	currGen, err := cpu.TimesWithContext(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -64,43 +72,49 @@ func getCPUMetrics(ctx context.Context, multipleCores bool) (*pb.CPUMetrics, err
 			break
 		}
 
-		a := stat
-		b := prev[i]
-
-		user := b.User - a.User
-		system := b.System - a.System
-		idle := b.Idle - a.Idle
-		iowait := b.Iowait - a.Iowait
-		irq := b.Irq - a.Irq
-		softirq := b.Softirq - a.Softirq
-		nice := b.Nice - a.Nice
-		steal := b.Steal - a.Steal
-
-		total :=
-			user + system + idle +
-				iowait + irq + softirq +
-				nice + steal
-
-		if total == 0 {
+		metrics := getCpuMetricsFromStats(prev[i], stat)
+		if metrics == nil {
 			continue
-		}
-
-		metrics := &pb.CoreCPUMetrics{
-			UserUtilization:   user / total,
-			SystemUtilization: system / total,
-			IdleUtilization:   idle / total,
-			IoWait:            iowait / total,
 		}
 
 		list = append(list, metrics)
 	}
 
-	slog.Debug("collected memory metrics")
+	slog.Debug("collected cpu metrics")
 
 	return &pb.CPUMetrics{
 		IsMultipleCores: false,
 		Cores:           list,
+		General:         getCpuMetricsFromStats(prevGen[0], currGen[0]),
 	}, nil
+}
+
+func getCpuMetricsFromStats(b, a cpu.TimesStat) *pb.CoreCPUMetrics {
+	user := b.User - a.User
+	system := b.System - a.System
+	idle := b.Idle - a.Idle
+	iowait := b.Iowait - a.Iowait
+	irq := b.Irq - a.Irq
+	softirq := b.Softirq - a.Softirq
+	nice := b.Nice - a.Nice
+	steal := b.Steal - a.Steal
+
+	total :=
+		user + system + idle +
+			iowait + irq + softirq +
+			nice + steal
+
+	if total == 0 {
+		return nil
+	}
+
+	return &pb.CoreCPUMetrics{
+		UserUtilization:   user / total,
+		SystemUtilization: system / total,
+		IdleUtilization:   idle / total,
+		IoWait:            iowait / total,
+		Core:              a.CPU,
+	}
 }
 
 func getMemoryMetrics(ctx context.Context) (*pb.MemoryMetrics, error) {
