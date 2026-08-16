@@ -1,3 +1,5 @@
+target = "bastiond"
+
 .PHONY: run build lint proto build 
 
 proto: 
@@ -9,8 +11,11 @@ proto:
 run:
 	go run .
 
+run-build: build
+	go run ${target} --port 8080 --level DEBUG
+
 build:
-	go build .
+	go build -o ${target} .
 
 lint:
 	go lint ./...
